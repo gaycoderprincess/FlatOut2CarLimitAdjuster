@@ -1,0 +1,5 @@
+# FlatOut 2 Car Limit Adjuster by Chloe @gaycoderprincess
+# enjoy, nya~ :3
+
+[main]
+max_cars = 260					# Maximum number of cars, 140 by default
