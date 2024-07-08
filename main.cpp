@@ -243,12 +243,14 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 
 			auto config = toml::parse_file("FlatOut2CarLimitAdjuster_gcp.toml");
 			int nMaxCars = config["main"]["max_cars"].value_or(260);
+			bool bExtendUpgrades = config["main"]["extend_upgrades"].value_or(true);
 			bool bCustomClasses = config["main"]["custom_classes"].value_or(false);
+			bool bOverrideSharedTextures = config["main"]["override_shared_textures"].value_or(false);
 
 			pNewUpgradeData1 = new tUpgradeData1[nMaxCars];
 			pNewUpgradeData2 = new tUpgradeData2[nMaxCars];
-			memset(pNewUpgradeData1, 0, sizeof(tUpgradeData1)*nMaxCars);
-			memset(pNewUpgradeData2, 0, sizeof(tUpgradeData1)*nMaxCars);
+			memset(pNewUpgradeData1, 0, sizeof(tUpgradeData1) * nMaxCars);
+			memset(pNewUpgradeData2, 0, sizeof(tUpgradeData2) * nMaxCars);
 
 			// allocate more memory for more cars
 			NyaHookLib::Patch(0x521103 + 1, 0x200 + (4 * nMaxCars));
@@ -257,24 +259,37 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 			NyaHookLib::Patch(0x4687B4 + 1, &gNewCarStatData);
 			NyaHookLib::Patch(0x46893C + 1, &gNewCarStatData);
 
-			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x456900, &CalculateStatsASM);
+			if (bExtendUpgrades) {
+				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x456900, &CalculateStatsASM);
 
-			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x467209, &UpgradesWrite1ASM);
-			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x467284, &UpgradesWrite2ASM);
+				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x467209, &UpgradesWrite1ASM);
+				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x467284, &UpgradesWrite2ASM);
 
-			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x46832E, &UpgradesRead1ASM);
-			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x468356, &UpgradesRead2ASM);
-			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x467625, &UpgradesRead3ASM);
-			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x467681, &UpgradesRead4ASM);
-			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x4676FF, &UpgradesRead5ASM);
-			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x46777A, &UpgradesRead6ASM);
-			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x4677F7, &UpgradesRead7ASM);
-			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x46814D, &UpgradesRead8ASM);
-			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x468175, &UpgradesRead9ASM);
+				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x46832E, &UpgradesRead1ASM);
+				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x468356, &UpgradesRead2ASM);
+				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x467625, &UpgradesRead3ASM);
+				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x467681, &UpgradesRead4ASM);
+				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x4676FF, &UpgradesRead5ASM);
+				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x46777A, &UpgradesRead6ASM);
+				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x4677F7, &UpgradesRead7ASM);
+				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x46814D, &UpgradesRead8ASM);
+				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x468175, &UpgradesRead9ASM);
 
-			// lua stuff
-			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x466359, &UpgradesRead10ASM);
-			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x467397, &UpgradesRead11ASM);
+				// lua stuff
+				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x466359, &UpgradesRead10ASM);
+				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x467397, &UpgradesRead11ASM);
+
+				// hack to make IsCarUpgradeDisabled not break, there's something very wrong here! todo find out why it's borked
+				NyaHookLib::Patch<uint32_t>(0x466405, 0x0F90D230);
+
+				// upgrade reader 128 checks
+				//NyaHookLib::Patch(0x4683DB + 2, nMaxUpgrades);
+				//NyaHookLib::Patch(0x468260 + 2, nMaxUpgrades);
+				//NyaHookLib::Patch(0x46783A + 2, nMaxUpgrades);
+
+				// game + 0x13A4 + (6C and 66C)
+				// game + 0x1410 and 0x1A10
+			}
 
 			if (bCustomClasses) {
 				auto arr = config["main"]["custom_class_names"].as_array();
@@ -285,10 +300,17 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x466E22, &CustomClassesASM);
 			}
 
-			// upgrade reader 128 checks
-			//NyaHookLib::Patch(0x4683DB + 2, nMaxUpgrades);
-			//NyaHookLib::Patch(0x468260 + 2, nMaxUpgrades);
-			//NyaHookLib::Patch(0x46783A + 2, nMaxUpgrades);
+			if (bOverrideSharedTextures) {
+				// remove hardcoded shared path from lights_damaged
+				static const char lightsDamagedPath[] = "lights_damaged.tga";
+				NyaHookLib::Patch(0x42FCF3 + 1, lightsDamagedPath);
+
+				// swap folder priorities
+				NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x42FC8D, 0x54D860);
+				NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x42FCA0, 0x54D7F0);
+				NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x431B6D, 0x54D860);
+				NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x431B75, 0x54D7F0);
+			}
 		} break;
 		default:
 			break;
