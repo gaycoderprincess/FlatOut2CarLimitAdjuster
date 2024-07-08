@@ -243,7 +243,7 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 
 			auto config = toml::parse_file("FlatOut2CarLimitAdjuster_gcp.toml");
 			int nMaxCars = config["main"]["max_cars"].value_or(260);
-			bool bExtendUpgrades = config["main"]["extend_upgrades"].value_or(true);
+			bool bExtendUpgrades = config["main"]["extend_upgrades"].value_or(false);
 			bool bCustomClasses = config["main"]["custom_classes"].value_or(false);
 			bool bOverrideSharedTextures = config["main"]["override_shared_textures"].value_or(false);
 
