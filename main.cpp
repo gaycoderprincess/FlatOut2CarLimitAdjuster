@@ -1,4 +1,5 @@
 #include <windows.h>
+#include <vector>
 #include "toml++/toml.hpp"
 #include "nya_commonhooklib.h"
 
@@ -189,6 +190,47 @@ void __attribute__((naked)) UpgradesRead11ASM() {
 	);
 }
 
+struct tCustomClass {
+	int id[2];
+	std::string name;
+};
+std::vector<tCustomClass> aCustomCarClasses;
+
+uint32_t nCarClassId1;
+uint32_t nCarClassId2;
+void __fastcall FindCustomClassStrings(const char* string) {
+	nCarClassId1 = 1;
+	nCarClassId2 = 1;
+	for (auto& carClass : aCustomCarClasses) {
+		if (string == carClass.name) {
+			nCarClassId1 = carClass.id[0];
+			nCarClassId2 = carClass.id[1];
+			return;
+		}
+	}
+}
+
+uintptr_t CustomClassesASM_string = 0x66D0E8;
+uintptr_t CustomClassesASM_jmp = 0x466E2E;
+void __attribute__((naked)) CustomClassesASM() {
+	__asm__ (
+		"pushad\n\t"
+		"mov ecx, eax\n\t"
+		"call %2\n\t"
+		"popad\n\t"
+
+		"mov ebx, %4\n\t"
+		"mov dword ptr [esp+0x10], ebx\n\t"
+		"mov ebx, %3\n\t"
+		"mov edi, %0\n\t"
+		"mov esi, eax\n\t"
+		"mov ecx, 6\n\t"
+		"jmp %1\n\t"
+			:
+			:  "m" (CustomClassesASM_string), "m" (CustomClassesASM_jmp), "i" (FindCustomClassStrings), "m" (nCarClassId1), "m" (nCarClassId2)
+	);
+}
+
 // todo check if 4FDDEF ever reads the upgrades
 
 BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
@@ -201,6 +243,7 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 
 			auto config = toml::parse_file("FlatOut2CarLimitAdjuster_gcp.toml");
 			int nMaxCars = config["main"]["max_cars"].value_or(260);
+			bool bCustomClasses = config["main"]["custom_classes"].value_or(false);
 
 			pNewUpgradeData1 = new tUpgradeData1[nMaxCars];
 			pNewUpgradeData2 = new tUpgradeData2[nMaxCars];
@@ -232,6 +275,15 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 			// lua stuff
 			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x466359, &UpgradesRead10ASM);
 			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x467397, &UpgradesRead11ASM);
+
+			if (bCustomClasses) {
+				auto arr = config["main"]["custom_class_names"].as_array();
+				int i = 4; // derby is 1, race is 2, street is 3, custom classes will start at 4
+				for (auto &data: *arr) {
+					aCustomCarClasses.push_back({i, i++, data.as_string()->get()});
+				}
+				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x466E22, &CustomClassesASM);
+			}
 
 			// upgrade reader 128 checks
 			//NyaHookLib::Patch(0x4683DB + 2, nMaxUpgrades);

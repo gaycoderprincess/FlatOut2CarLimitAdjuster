@@ -2,4 +2,6 @@
 # enjoy, nya~ :3
 
 [main]
-max_cars = 260					# Maximum number of cars, 140 by default
+max_cars = 260							# Maximum number of cars, 140 by default
+custom_classes = false						# Enable custom car AI classes
+custom_class_names = ["Test1", "Test2", "Test3"]		# Folder paths for extra AI classes if they are enabled (vanilla has Beginner, Amateur and Professional for class 0, 1 and 2, and these will be classes 3 and up)
