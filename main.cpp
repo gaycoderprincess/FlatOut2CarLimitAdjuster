@@ -180,9 +180,11 @@ void __attribute__((naked)) UpgradesRead10ASM() {
 uintptr_t UpgradesRead11ASM_jmp = 0x46739D;
 void __attribute__((naked)) UpgradesRead11ASM() {
 	__asm__ (
+		"push esi\n\t"
 		"mov esi, %0\n\t"
 		"add esi, 8\n\t"
 		"mov edi, [esi+eax*4]\n\t"
+		"pop esi\n\t"
 		"test edi, edi\n\t"
 		"jmp %1\n\t"
 			:
@@ -243,7 +245,7 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 
 			auto config = toml::parse_file("FlatOut2CarLimitAdjuster_gcp.toml");
 			int nMaxCars = config["main"]["max_cars"].value_or(260);
-			bool bExtendUpgrades = config["main"]["extend_upgrades"].value_or(false);
+			bool bExtendUpgrades = config["main"]["extend_upgrades"].value_or(true);
 			bool bCustomClasses = config["main"]["custom_classes"].value_or(false);
 			bool bOverrideSharedTextures = config["main"]["override_shared_textures"].value_or(false);
 
@@ -279,16 +281,10 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x466359, &UpgradesRead10ASM);
 				NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x467397, &UpgradesRead11ASM);
 
-				// hack to make IsCarUpgradeDisabled not break, there's something very wrong here! todo find out why it's borked
-				NyaHookLib::Patch<uint32_t>(0x466405, 0x0F90D230);
-
 				// upgrade reader 128 checks
 				//NyaHookLib::Patch(0x4683DB + 2, nMaxUpgrades);
 				//NyaHookLib::Patch(0x468260 + 2, nMaxUpgrades);
 				//NyaHookLib::Patch(0x46783A + 2, nMaxUpgrades);
-
-				// game + 0x13A4 + (6C and 66C)
-				// game + 0x1410 and 0x1A10
 			}
 
 			if (bCustomClasses) {
