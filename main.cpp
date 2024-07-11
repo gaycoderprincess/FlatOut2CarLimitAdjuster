@@ -233,6 +233,19 @@ void __attribute__((naked)) CustomClassesASM() {
 	);
 }
 
+uintptr_t CullModeASM_jmp = 0x5A6A72;
+void __attribute__((naked)) CullModeASM() {
+	__asm__ (
+		"push eax\n\t"
+		"mov eax, 0x8E56B4\n\t"
+		"mov dword ptr [eax], 3\n\t"
+		"pop eax\n\t"
+		"jmp %0\n\t"
+			:
+			:  "m" (CullModeASM_jmp)
+	);
+}
+
 // todo check if 4FDDEF ever reads the upgrades
 
 BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
@@ -255,6 +268,9 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 			NyaHookLib::Patch(0x4ABADB + 3, nMenuCarModelMemory);
 			NyaHookLib::Patch(0x4ABAEA + 1, nMenuCarSkinMemory);
 			NyaHookLib::Patch(0x4ABAEF + 3, nMenuCarSkinMemory);
+
+			// menucar backface culling fix
+			NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x5A6A6C, &CullModeASM);
 
 			pNewUpgradeData1 = new tUpgradeData1[nMaxCars];
 			pNewUpgradeData2 = new tUpgradeData2[nMaxCars];
