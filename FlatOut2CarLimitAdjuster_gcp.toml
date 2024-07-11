@@ -7,3 +7,5 @@ extend_upgrades = true						# Allow more than 64 cars to have upgrades
 custom_classes = false						# Enable custom car AI classes
 custom_class_names = ["Test1", "Test2", "Test3"]		# Folder paths for extra AI classes if they are enabled (vanilla has Beginner, Amateur and Professional for class 0, 1 and 2, and these will be classes 3 and up)
 override_shared_textures = true					# Allow loading lights, windows, and shadow textures from the car path instead of data/cars/shared
+menucar_max_model_size = 524288					# Maximum filesize for menucar bgm files
+menucar_max_skin_size = 2097152					# Maximum filesize for menucar skin textures

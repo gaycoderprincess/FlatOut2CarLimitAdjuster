@@ -248,6 +248,13 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 			bool bExtendUpgrades = config["main"]["extend_upgrades"].value_or(true);
 			bool bCustomClasses = config["main"]["custom_classes"].value_or(false);
 			bool bOverrideSharedTextures = config["main"]["override_shared_textures"].value_or(false);
+			int nMenuCarModelMemory = config["main"]["menucar_max_model_size"].value_or(524288);
+			int nMenuCarSkinMemory = config["main"]["menucar_max_skin_size"].value_or(2097152);
+
+			NyaHookLib::Patch(0x4ABAD0 + 1, nMenuCarModelMemory);
+			NyaHookLib::Patch(0x4ABADB + 3, nMenuCarModelMemory);
+			NyaHookLib::Patch(0x4ABAEA + 1, nMenuCarSkinMemory);
+			NyaHookLib::Patch(0x4ABAEF + 3, nMenuCarSkinMemory);
 
 			pNewUpgradeData1 = new tUpgradeData1[nMaxCars];
 			pNewUpgradeData2 = new tUpgradeData2[nMaxCars];
