@@ -263,6 +263,9 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 			bool bOverrideSharedTextures = config["main"]["override_shared_textures"].value_or(false);
 			int nMenuCarModelMemory = config["main"]["menucar_max_model_size"].value_or(524288);
 			int nMenuCarSkinMemory = config["main"]["menucar_max_skin_size"].value_or(2097152);
+			int nLUAMemory = config["main"]["lua_memory_pool_size"].value_or(0x900000);
+
+			NyaHookLib::Patch(0x6500AE + 1, nLUAMemory);
 
 			NyaHookLib::Patch(0x4ABAD0 + 1, nMenuCarModelMemory);
 			NyaHookLib::Patch(0x4ABADB + 3, nMenuCarModelMemory);

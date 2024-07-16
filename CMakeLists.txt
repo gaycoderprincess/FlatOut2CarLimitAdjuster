@@ -19,5 +19,3 @@ target_link_options(FlatOut2CarLimitAdjuster PRIVATE "-Wl,--exclude-all-symbols"
 
 set_target_properties(FlatOut2CarLimitAdjuster PROPERTIES PREFIX "")
 set_target_properties(FlatOut2CarLimitAdjuster PROPERTIES SUFFIX "_gcp.dll")
-
-target_link_libraries(FlatOut2CarLimitAdjuster d3dx9)
