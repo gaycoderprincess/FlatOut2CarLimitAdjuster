@@ -241,13 +241,122 @@ void __attribute__((naked)) CullModeASM() {
 	);
 }
 
+class DevTexture {
+public:
+	uint8_t _0[0x14];
+	void* pSomePtr; // +0x14
+	uint8_t _18[0x8];
+	char* sPath; // +0x20
+	uint8_t _24[0x10];
+	uint32_t nPathLength; // +0x34
+	uint8_t _38[0x18];
+	void* pD3DTexture; // +0x50
+};
+
+class DeviceD3d {
+public:
+	virtual void _vf0() = 0;
+	virtual void _vf1() = 0;
+	virtual void _vf2() = 0;
+	virtual void _vf3() = 0;
+	virtual void _vf4() = 0;
+	virtual void _vf5() = 0;
+	virtual void _vf6() = 0;
+	virtual void _vf7() = 0;
+	virtual void _vf8() = 0;
+	virtual void _vf9() = 0;
+	virtual void _vf10() = 0;
+	virtual void _vf11() = 0;
+	virtual void _vf12() = 0;
+	virtual void _vf13() = 0;
+	virtual void _vf14() = 0;
+	virtual void _vf15() = 0;
+	virtual void _vf16() = 0;
+	virtual void _vf17() = 0;
+	virtual void _vf18() = 0;
+	virtual void _vf19() = 0;
+	virtual void _vf20() = 0;
+	virtual void _vf21() = 0;
+	virtual void _vf22() = 0;
+	virtual void _vf23() = 0;
+	virtual void _vf24() = 0;
+	virtual void _vf25() = 0;
+	virtual void _vf26() = 0;
+	virtual void _vf27() = 0;
+	virtual void _vf28() = 0;
+	virtual void _vf29() = 0;
+	virtual void _vf30() = 0;
+	virtual void _vf31() = 0;
+	virtual void _vf32() = 0;
+	virtual void _vf33() = 0;
+	virtual void _vf34() = 0;
+	virtual void _vf35() = 0;
+	virtual void _vf36() = 0;
+	virtual void _vf37() = 0;
+	virtual void _vf38() = 0;
+	virtual void _vf39() = 0;
+	virtual void _vf40() = 0;
+	virtual void _vf41() = 0;
+	virtual void _vf42() = 0;
+	virtual void _vf43() = 0;
+	virtual void _vf44() = 0;
+	virtual void _vf45() = 0;
+	virtual void _vf46() = 0;
+	virtual void _vf47() = 0;
+	virtual void _vf48() = 0;
+	virtual void _vf49() = 0;
+	virtual void _vf50() = 0;
+	virtual void _vf51() = 0;
+	virtual void _vf52() = 0;
+	virtual void _vf53() = 0;
+	virtual void _vf54() = 0;
+	virtual void _vf55() = 0;
+	virtual void _vf56() = 0;
+	virtual void _vf57() = 0;
+	virtual void _vf58() = 0;
+	virtual void _vf59() = 0;
+	virtual void _vf60() = 0;
+	virtual void _vf61() = 0;
+	virtual void _vf62() = 0;
+	virtual void _vf63() = 0;
+	virtual void _vf64() = 0;
+	virtual void CreateTextureFromFile(DevTexture* pTexture, const char* sPath, void* pSomePtr) = 0;
+};
+auto& pDeviceD3d = *(DeviceD3d**)0x8DA718;
+
+void __fastcall LoadDevTexture(DevTexture* pTexture) {
+	if (pTexture->pD3DTexture) return;
+
+	auto path = pTexture->sPath;
+	if (pTexture->nPathLength < 16) path = (char*)&pTexture->sPath;
+
+	pDeviceD3d->CreateTextureFromFile(pTexture, path, pTexture->pSomePtr);
+}
+
+uintptr_t LoadMenuTexturesASM_jmp = 0x4A4FCE;
+void __attribute__((naked)) LoadMenuTexturesASM() {
+	__asm__ (
+		"pushad\n\t"
+		"mov ecx, eax\n\t"
+		"call %1\n\t"
+		"popad\n\t"
+
+		"mov esi, [esp+0x1C]\n\t"
+		"mov edx, [esp+0xB4]\n\t"
+		"jmp %0\n\t"
+			:
+			:  "m" (LoadMenuTexturesASM_jmp), "i" (LoadDevTexture)
+	);
+}
+
 // todo check if 4FDDEF ever reads the upgrades
 
 struct tCarLimitAdjusterSettings {
 	int nMaxCars = 260;
 	bool bExtendUpgrades = true;
 	bool bCustomClasses = false;
-	bool bOverrideSharedTextures = false;
+	bool bOverrideSharedTextures = true;
+	bool bMenuCarLoadCustomTextures = true;
 	int nMenuCarModelMemory = 524288;
 	int nMenuCarSkinMemory = 2097152;
 	int nLUAMemory = 0x900000;
@@ -318,5 +427,9 @@ void InitCarLimitAdjuster() {
 		NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x42FCA0, 0x54D7F0);
 		NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x431B6D, 0x54D860);
 		NyaHookLib::PatchRelative(NyaHookLib::CALL, 0x431B75, 0x54D7F0);
+	}
+
+	if (settings.bMenuCarLoadCustomTextures) {
+		NyaHookLib::PatchRelative(NyaHookLib::JMP, 0x4A4FC3, &LoadMenuTexturesASM);
 	}
 }

@@ -17,7 +17,8 @@ BOOL WINAPI DllMain(HINSTANCE, DWORD fdwReason, LPVOID) {
 			gCarLimitAdjusterSettings.nMaxCars = config["main"]["max_cars"].value_or(260);
 			gCarLimitAdjusterSettings.bExtendUpgrades = config["main"]["extend_upgrades"].value_or(true);
 			gCarLimitAdjusterSettings.bCustomClasses = config["main"]["custom_classes"].value_or(false);
-			gCarLimitAdjusterSettings.bOverrideSharedTextures = config["main"]["override_shared_textures"].value_or(false);
+			gCarLimitAdjusterSettings.bOverrideSharedTextures = config["main"]["override_shared_textures"].value_or(true);
+			gCarLimitAdjusterSettings.bMenuCarLoadCustomTextures = config["main"]["menucar_load_custom_textures"].value_or(true);
 			gCarLimitAdjusterSettings.nMenuCarModelMemory = config["main"]["menucar_max_model_size"].value_or(524288);
 			gCarLimitAdjusterSettings.nMenuCarSkinMemory = config["main"]["menucar_max_skin_size"].value_or(2097152);
 			gCarLimitAdjusterSettings.nLUAMemory = config["main"]["lua_memory_pool_size"].value_or(0x900000);
